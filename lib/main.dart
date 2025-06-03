@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:myapp/screens/loginpage.dart';
 import 'package:myapp/screens/products.dart';
 // Import your actual starting screen
 import 'screens/welcomepage.dart';
-import 'screens/loginpage.dart';
+// Đảm bảo import đúng file
 // import 'screens/signup_page.dart';
 import 'screens/home_screen.dart';
 import 'screens/products.dart';
@@ -36,8 +37,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false, // Optional: hide debug banner
       // Set your desired starting screen here
       //home: const Products(), // Start with Welcomepage
-      ///home: const Products(),
-      home: CloudinaryUploadScreen(),
+      home: const Loginpage(), // Hoặc WelcomePage() nếu bạn muốn bắt đầu từ đó
     );
   }
 }

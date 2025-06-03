@@ -1,12 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'signup_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:myapp/constants/firestore_paths.dart';
-import 'package:myapp/services/firestore_service.dart';
+import 'package:myapp/screens/admin/add_products.dart';
 import 'home_screen.dart';
-import 'signup_page.dart';
 
 class Loginpage extends StatefulWidget {
   // Changed to StatefulWidget
@@ -17,68 +15,101 @@ class Loginpage extends StatefulWidget {
 }
 
 class _LoginpageState extends State<Loginpage> {
-  final _usernameController = TextEditingController();
+  final _formKey = GlobalKey<FormState>(); // Key for Form validation
+  final _emailController =
+      TextEditingController(); // Changed from _usernameController
   final _passwordController = TextEditingController();
   bool _isPasswordVisible = false;
+  bool _isLoading = false; // To manage loading state
+  String? _errorMessage; // To display error messages
 
   @override
   void dispose() {
-    _usernameController.dispose();
+    _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
 
-  final FirestoreService _firestoreService = FirestoreService();
   void _login() async {
-    final username = _usernameController.text.trim();
-    final password = _passwordController.text.trim();
+    if (_formKey.currentState?.validate() ?? false) {
+      setState(() {
+        _isLoading = true;
+        _errorMessage = null;
+      });
 
-    if (username.isEmpty || password.isEmpty) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter both username and password.'),
-        ),
-      );
-      return;
-    }
+      try {
+        UserCredential userCredential = await FirebaseAuth.instance
+            .signInWithEmailAndPassword(
+              email: _emailController.text.trim(),
+              password: _passwordController.text.trim(),
+            );
 
-    try {
-      DocumentSnapshot userDoc = await _firestoreService
-          .getDocumentFromSubCollection(
-            topLevelCollection: FirestorePaths.topLevelCfdb,
-            parentDocId: FirestorePaths.defaultParentInCfdb,
-            subCollection: FirestorePaths.usersSubCollection,
-            docIdInSubCollection: '01',
-          );
+        if (userCredential.user != null) {
+          // Fetch user role from Firestore
+          DocumentSnapshot userDoc =
+              await FirebaseFirestore.instance
+                  .collection(FirestorePaths.topLevelCfdb)
+                  .doc(FirestorePaths.defaultParentInCfdb)
+                  .collection(FirestorePaths.usersSubCollection)
+                  .doc(userCredential.user!.uid) // Use Firebase Auth UID
+                  .get();
 
-      if (userDoc.exists) {
-        final userData = userDoc.data() as Map<String, dynamic>;
+          if (mounted) {
+            if (userDoc.exists) {
+              final userData = userDoc.data() as Map<String, dynamic>;
+              // Assuming 'role' is true for admin, false for regular user
+              final bool isAdmin = userData['role'] == true;
 
-        final storedUsername = userData['email'];
-        final storedPassword = userData['password'];
-
-        if (username == storedUsername && password == storedPassword) {
-          print('Login successful');
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const HomeScreen()),
-          );
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Invalid username or password.')),
-          );
+              if (isAdmin) {
+                print('Admin login successful');
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const AddProductScreen(),
+                  ),
+                );
+              } else {
+                print('User login successful');
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => const HomeScreen()),
+                );
+              }
+            } else {
+              // User authenticated but no Firestore record, handle as needed
+              // For now, default to user or show error
+              _errorMessage = 'Không tìm thấy thông tin người dùng.';
+              print(
+                'User record not found in Firestore for UID: ${userCredential.user!.uid}',
+              );
+            }
+          }
         }
-      } else {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('User not found.')));
+      } on FirebaseAuthException catch (e) {
+        if (mounted) {
+          if (e.code == 'user-not-found') {
+            _errorMessage = 'Không tìm thấy người dùng với email này.';
+          } else if (e.code == 'wrong-password') {
+            _errorMessage = 'Sai mật khẩu.';
+          } else if (e.code == 'invalid-email') {
+            _errorMessage = 'Địa chỉ email không hợp lệ.';
+          } else {
+            _errorMessage = 'Đăng nhập thất bại: ${e.message}';
+          }
+          print('Firebase Auth Exception: ${e.code} - ${e.message}');
+        }
+      } catch (e) {
+        if (mounted) {
+          _errorMessage = 'Đã xảy ra lỗi không mong muốn. Vui lòng thử lại.';
+          print('Error during login: $e');
+        }
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
       }
-    } catch (e) {
-      print('Error during login: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Login failed. Please try again.')),
-      );
     }
   }
 
@@ -91,179 +122,184 @@ class _LoginpageState extends State<Loginpage> {
 
   @override
   Widget build(BuildContext context) {
-    // Access theme data for consistent styling
     final ThemeData theme = Theme.of(context);
     final ColorScheme colorScheme = theme.colorScheme;
     final TextTheme textTheme = theme.textTheme;
-    final Size screenSize = MediaQuery.of(context).size; // Get screen size
+    final Size screenSize = MediaQuery.of(context).size;
 
     return Scaffold(
       resizeToAvoidBottomInset: false,
       body: Stack(
         children: [
-          // Background Image
           Container(
             width: double.infinity,
             height: double.infinity,
             decoration: const BoxDecoration(
               image: DecorationImage(
-                image: AssetImage(
-                  "assets/images/Login_picture.jpg",
-                ), // Ensure path is correct
+                image: AssetImage("assets/images/Login_picture.jpg"),
                 fit: BoxFit.cover,
               ),
             ),
           ),
-          // Overlay Content - Consider SingleChildScrollView if keyboard covers fields
           Positioned(
-            // Adjust positioning based on screen size or use Align/Column
-            bottom:
-                screenSize.height * 0.1, // Position relative to screen height
+            bottom: screenSize.height * 0.1,
             left: 0,
             right: 0,
             child: Container(
-              // Adjust height dynamically or use intrinsic height widgets
-              padding: const EdgeInsets.all(
-                20.0,
-              ), // Use padding instead of fixed height
-              margin: const EdgeInsets.symmetric(
-                horizontal: 20.0,
-              ), // Add horizontal margin
+              padding: const EdgeInsets.all(20.0),
+              margin: const EdgeInsets.symmetric(horizontal: 20.0),
               decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.5), // Slightly darker overlay
-                borderRadius: BorderRadius.circular(15), // Rounded corners
+                color: Colors.black.withOpacity(0.5),
+                borderRadius: BorderRadius.circular(15),
               ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min, // Take minimum space needed
-                children: [
-                  const SizedBox(height: 20),
-                  Text(
-                    "Welcome Back",
-                    style: textTheme.headlineMedium?.copyWith(
-                      // Use theme text style
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
+              child: Form(
+                // Wrap with Form widget
+                key: _formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const SizedBox(height: 20),
+                    Text(
+                      "Welcome Back",
+                      style: textTheme.headlineMedium?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 30), // Increased spacing
-                  TextField(
-                    controller: _usernameController, // Use controller
-                    style: const TextStyle(
-                      color: Colors.black,
-                    ), // Text color inside field
-                    decoration: InputDecoration(
-                      filled: true,
-                      fillColor: Colors.white.withOpacity(
-                        0.9,
-                      ), // Slightly transparent white
-                      hintText: "Username or Email", // Use hintText
-                      hintStyle: TextStyle(
-                        // Style for hint text
-                        color: Colors.grey[600],
+                    const SizedBox(height: 30),
+                    TextFormField(
+                      // Changed to TextFormField
+                      controller: _emailController,
+                      style: const TextStyle(color: Colors.black),
+                      decoration: InputDecoration(
+                        filled: true,
+                        fillColor: Colors.white.withOpacity(0.9),
+                        hintText: "Email", // Updated hint text
+                        hintStyle: TextStyle(color: Colors.grey[600]),
+                        prefixIcon: Icon(
+                          Icons.email_outlined,
+                          color: Colors.grey[700],
+                        ), // Updated icon
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          vertical: 15,
+                          horizontal: 15,
+                        ),
                       ),
-                      prefixIcon: Icon(
-                        Icons.person_outline,
-                        color: Colors.grey[700],
-                      ), // Add icon
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(
-                          12,
-                        ), // Adjusted radius
-                        borderSide: BorderSide.none, // Remove border line
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        vertical: 15,
-                        horizontal: 15,
-                      ), // Adjust padding
+                      keyboardType: TextInputType.emailAddress,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Vui lòng nhập email';
+                        }
+                        if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
+                          return 'Vui lòng nhập địa chỉ email hợp lệ';
+                        }
+                        return null;
+                      },
                     ),
-                    keyboardType:
-                        TextInputType.emailAddress, // Suggest email keyboard
-                  ),
-                  const SizedBox(height: 15),
-                  TextField(
-                    controller: _passwordController, // Use controller
-                    obscureText:
-                        !_isPasswordVisible, // Use state for visibility
-                    style: const TextStyle(color: Colors.black),
-                    decoration: InputDecoration(
-                      filled: true,
-                      fillColor: Colors.white.withOpacity(0.9),
-                      hintText: "Password",
-                      hintStyle: TextStyle(color: Colors.grey[600]),
-                      prefixIcon: Icon(
-                        Icons.lock_outline,
-                        color: Colors.grey[700],
-                      ),
-                      suffixIcon: IconButton(
-                        // Add visibility toggle
-                        icon: Icon(
-                          _isPasswordVisible
-                              ? Icons.visibility_off
-                              : Icons.visibility,
+                    const SizedBox(height: 15),
+                    TextFormField(
+                      // Changed to TextFormField
+                      controller: _passwordController,
+                      obscureText: !_isPasswordVisible,
+                      style: const TextStyle(color: Colors.black),
+                      decoration: InputDecoration(
+                        filled: true,
+                        fillColor: Colors.white.withOpacity(0.9),
+                        hintText: "Password",
+                        hintStyle: TextStyle(color: Colors.grey[600]),
+                        prefixIcon: Icon(
+                          Icons.lock_outline,
                           color: Colors.grey[700],
                         ),
-                        onPressed: () {
-                          setState(() {
-                            _isPasswordVisible = !_isPasswordVisible;
-                          });
-                        },
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none,
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        vertical: 15,
-                        horizontal: 15,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 25), // Increased spacing
-                  ElevatedButton(
-                    onPressed: _login, // Call login method
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor:
-                          colorScheme.primary, // Use theme primary color
-                      foregroundColor:
-                          colorScheme.onPrimary, // Use theme onPrimary color
-                      minimumSize: const Size(
-                        double.infinity,
-                        50,
-                      ), // Make button stretch and taller
-                      shape: RoundedRectangleBorder(
-                        // Rounded corners for button
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      textStyle: textTheme.labelLarge, // Use theme text style
-                    ),
-                    child: const Text("Login"),
-                  ),
-                  const SizedBox(height: 20),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        "Don't have an account? ", // Corrected grammar
-                        style: textTheme.bodyMedium?.copyWith(
-                          color: Colors.white70,
-                        ), // Use theme style
-                      ),
-                      GestureDetector(
-                        onTap: _navigateToSignUp, // Call navigation method
-                        child: Text(
-                          "Sign Up", // Changed text
-                          style: textTheme.bodyMedium?.copyWith(
-                            color: colorScheme.primary, // Use theme color
-                            fontWeight: FontWeight.bold, // Make it bold
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _isPasswordVisible
+                                ? Icons.visibility_off
+                                : Icons.visibility,
+                            color: Colors.grey[700],
                           ),
+                          onPressed: () {
+                            setState(() {
+                              _isPasswordVisible = !_isPasswordVisible;
+                            });
+                          },
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          vertical: 15,
+                          horizontal: 15,
                         ),
                       ),
-                    ],
-                  ),
-                  const SizedBox(
-                    height: 10,
-                  ), // Add some bottom padding inside the container
-                ],
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Vui lòng nhập mật khẩu';
+                        }
+                        return null;
+                      },
+                    ),
+                    if (_errorMessage != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 15.0, bottom: 10.0),
+                        child: Text(
+                          _errorMessage!,
+                          style: TextStyle(
+                            color: Colors.red[300],
+                            fontSize: 14,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      )
+                    else
+                      const SizedBox(
+                        height: 25,
+                      ), // Original spacing if no error
+                    _isLoading
+                        ? CircularProgressIndicator(color: colorScheme.primary)
+                        : ElevatedButton(
+                          onPressed: _login,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: colorScheme.primary,
+                            foregroundColor: colorScheme.onPrimary,
+                            minimumSize: const Size(double.infinity, 50),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            textStyle: textTheme.labelLarge,
+                          ),
+                          child: const Text("Login"),
+                        ),
+                    const SizedBox(height: 20),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          "Don't have an account? ",
+                          style: textTheme.bodyMedium?.copyWith(
+                            color: Colors.white70,
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: _navigateToSignUp,
+                          child: Text(
+                            "Sign Up",
+                            style: textTheme.bodyMedium?.copyWith(
+                              color: colorScheme.primary,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                  ],
+                ),
               ),
             ),
           ),
