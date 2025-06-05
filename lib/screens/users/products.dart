@@ -19,6 +19,7 @@ class Product {
   final String description;
   final String imageUrl; // Can be a relative path or an identifier
   final Timestamp timestamp;
+  final bool status;
 
   Product({
     required this.id,
@@ -27,6 +28,7 @@ class Product {
     required this.description,
     required this.imageUrl,
     required this.timestamp,
+    required this.status,
   });
 
   factory Product.fromFirestore(DocumentSnapshot<Map<String, dynamic>> doc) {
@@ -34,8 +36,9 @@ class Product {
     return Product(
       id: data['productId'] ?? doc.id,
       name: data['name'] ?? 'Unnamed Product',
-      price: (data['price'] ?? 0.0).toDouble(),
+      price: (data['price'] ?? 0).toDouble(),
       description: data['description'] ?? '',
+      status: data['status'] ?? true,
       imageUrl: data['imageUrl'] ?? '',
       timestamp: data['timestamp'] ?? Timestamp.now(),
     );
@@ -44,24 +47,141 @@ class Product {
 
 class _ProductsState extends State<Products> {
   final _formKey = GlobalKey<FormState>();
-  // Define your Firestore instance and collection reference
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  late CollectionReference _productsCollection;
+  // Khai báo tường minh kiểu dữ liệu cho collection reference để code rõ ràng và an toàn hơn
+  late CollectionReference<Map<String, dynamic>> _productsCollection;
 
   @override
   void initState() {
     super.initState();
-    // Initialize your products collection reference
-    // Assuming FirestorePaths are defined correctly
+    // Khởi tạo collection reference, sử dụng withConverter để đảm bảo kiểu dữ liệu
     _productsCollection = _firestore
         .collection(FirestorePaths.topLevelCfdb)
         .doc(FirestorePaths.defaultParentInCfdb)
-        .collection(FirestorePaths.productsSubCollection);
+        .collection(FirestorePaths.productsSubCollection)
+        .withConverter<Map<String, dynamic>>(
+          // Đảm bảo kiểu dữ liệu đúng cho snapshots
+          fromFirestore: (snapshot, _) => snapshot.data()!,
+          toFirestore: (data, _) => data,
+        );
   }
 
   @override
   void dispose() {
     super.dispose();
+  }
+
+  // Hàm trợ giúp xây dựng widget hiển thị khi đang tải ảnh
+  Widget _imageLoadingBuilder(
+    BuildContext context,
+    Widget child,
+    ImageChunkEvent? loadingProgress,
+  ) {
+    if (loadingProgress == null) return child; // Ảnh đã tải xong
+    return Center(
+      child: CircularProgressIndicator(
+        valueColor: AlwaysStoppedAnimation<Color>(Colors.orangeAccent),
+        value:
+            loadingProgress.expectedTotalBytes != null
+                ? loadingProgress.cumulativeBytesLoaded /
+                    loadingProgress.expectedTotalBytes!
+                : null, // Hiển thị tiến trình nếu có
+      ),
+    );
+  }
+
+  // Hàm trợ giúp chính để xây dựng widget ảnh sản phẩm
+  Widget _buildProductImageWidget(String imageUrl) {
+    // Định nghĩa kích thước ảnh và widget placeholder một lần
+    const double imageHeight = 120;
+    const double imageWidth = 160;
+
+    final Widget placeholder = Image.asset(
+      'assets/images/coffee_placeholder.png', // Đảm bảo đường dẫn này đúng và ảnh có trong pubspec.yaml
+      height: imageHeight,
+      width: imageWidth,
+      fit: BoxFit.cover,
+    );
+
+    if (imageUrl.isEmpty) {
+      return placeholder; // Nếu không có URL, hiển thị placeholder
+    }
+
+    // Hàm xử lý lỗi chung cho Image.network
+    Widget imageNetworkErrorBuilder(
+      BuildContext context,
+      Object error,
+      StackTrace? stackTrace,
+      String logUrl,
+    ) {
+      print('Lỗi tải ảnh từ $logUrl: $error');
+      return placeholder; // Hiển thị placeholder khi có lỗi
+    }
+
+    if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+      // Trường hợp URL là một liên kết trực tiếp (ví dụ: từ Cloudinary)
+      return Image.network(
+        imageUrl,
+        height: imageHeight,
+        width: imageWidth,
+        fit: BoxFit.cover,
+        loadingBuilder: _imageLoadingBuilder,
+        errorBuilder:
+            (context, error, stackTrace) =>
+                imageNetworkErrorBuilder(context, error, stackTrace, imageUrl),
+      );
+    } else if (imageUrl.startsWith('products/')) {
+      // Trường hợp URL là đường dẫn tương đối trên Firebase Storage
+      return FutureBuilder<String>(
+        future:
+            firebase_storage.FirebaseStorage.instance
+                .ref(imageUrl)
+                .getDownloadURL(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            // Đang lấy URL tải xuống
+            return Container(
+              height: imageHeight,
+              width: imageWidth,
+              color: Colors.grey[850], // Màu nền tạm thời khi tải
+              child: Center(
+                child: CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    Colors.orangeAccent,
+                  ),
+                ),
+              ),
+            );
+          }
+          if (snapshot.hasError ||
+              !snapshot.hasData ||
+              snapshot.data!.isEmpty) {
+            print('Lỗi lấy URL tải xuống cho $imageUrl: ${snapshot.error}');
+            return placeholder; // Hiển thị placeholder nếu có lỗi
+          }
+          // Khi đã có URL, sử dụng Image.network để hiển thị
+          return Image.network(
+            snapshot.data!,
+            height: imageHeight,
+            width: imageWidth,
+            fit: BoxFit.cover,
+            loadingBuilder: _imageLoadingBuilder,
+            errorBuilder:
+                (context, error, stackTrace) => imageNetworkErrorBuilder(
+                  context,
+                  error,
+                  stackTrace,
+                  snapshot.data!,
+                ),
+          );
+        },
+      );
+    }
+    // Trường hợp định dạng URL không nhận dạng được, dùng placeholder
+    print(
+      'Định dạng URL ảnh không được nhận dạng: $imageUrl. Sử dụng placeholder.',
+    );
+    return placeholder;
   }
 
   @override
@@ -128,11 +248,11 @@ class _ProductsState extends State<Products> {
               Container(
                 height: 250,
                 child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                  // Kiểu stream giờ đây rõ ràng hơn nhờ CollectionReference đã được định kiểu
                   stream:
                       _productsCollection
-                              .orderBy('timestamp', descending: true)
-                              .snapshots()
-                          as Stream<QuerySnapshot<Map<String, dynamic>>>?,
+                          .orderBy('timestamp', descending: true)
+                          .snapshots(),
                   builder: (context, snapshot) {
                     if (snapshot.hasError) {
                       return Center(
@@ -168,137 +288,9 @@ class _ProductsState extends State<Products> {
                         final product = Product.fromFirestore(
                           productData,
                         ); // Chuyển đổi dữ liệu Firestore thành đối tượng Product
-
-                        Widget productImageWidget;
-                        final String imageUrlValue = product.imageUrl;
-
-                        if (imageUrlValue.isNotEmpty) {
-                          // Define placeholder widget once to avoid repetition
-                          Widget placeholder = Image.asset(
-                            'assets/images/coffee_placeholder.png', // Ensure this path is correct and asset is in pubspec.yaml
-                            height: 120,
-                            width: 160,
-                            fit: BoxFit.cover,
-                          );
-
-                          if (imageUrlValue.startsWith('http://') ||
-                              imageUrlValue.startsWith('https://')) {
-                            // Đây là một URL trực tuyến
-                            productImageWidget = Image.network(
-                              imageUrlValue,
-                              height: 120,
-                              width: 160,
-                              fit: BoxFit.cover,
-                              loadingBuilder: (
-                                BuildContext context,
-                                Widget child,
-                                ImageChunkEvent? loadingProgress,
-                              ) {
-                                if (loadingProgress == null) return child;
-                                return Center(
-                                  child: CircularProgressIndicator(
-                                    valueColor: AlwaysStoppedAnimation<Color>(
-                                      Colors.orangeAccent,
-                                    ),
-                                    value:
-                                        loadingProgress.expectedTotalBytes !=
-                                                null
-                                            ? loadingProgress
-                                                    .cumulativeBytesLoaded /
-                                                loadingProgress
-                                                    .expectedTotalBytes!
-                                            : null,
-                                  ),
-                                );
-                              },
-                              errorBuilder: (context, error, stackTrace) {
-                                // Lỗi khi tải ảnh từ network, hiển thị ảnh placeholder
-                                print('Error loading network image: $error');
-                                return placeholder;
-                              },
-                            );
-                          } else if (imageUrlValue.startsWith('products/')) {
-                            // Đây là đường dẫn Firebase Storage
-                            productImageWidget = FutureBuilder<String>(
-                              future:
-                                  firebase_storage.FirebaseStorage.instance
-                                      .ref(imageUrlValue)
-                                      .getDownloadURL(),
-                              builder: (context, urlSnapshot) {
-                                if (urlSnapshot.connectionState ==
-                                    ConnectionState.waiting) {
-                                  return Container(
-                                    height: 120,
-                                    width: 160,
-                                    color: Colors.grey[850],
-                                    child: Center(
-                                      child: CircularProgressIndicator(
-                                        valueColor:
-                                            AlwaysStoppedAnimation<Color>(
-                                              Colors.orangeAccent,
-                                            ),
-                                      ),
-                                    ),
-                                  );
-                                }
-                                if (urlSnapshot.hasError ||
-                                    !urlSnapshot.hasData ||
-                                    urlSnapshot.data!.isEmpty) {
-                                  print(
-                                    'Error getting download URL from Firebase Storage: ${urlSnapshot.error}',
-                                  );
-                                  return placeholder;
-                                }
-                                return Image.network(
-                                  urlSnapshot.data!,
-                                  height: 120,
-                                  width: 160,
-                                  fit: BoxFit.cover,
-                                  loadingBuilder: (
-                                    BuildContext context,
-                                    Widget child,
-                                    ImageChunkEvent? loadingProgress,
-                                  ) {
-                                    if (loadingProgress == null) return child;
-                                    return Center(
-                                      child: CircularProgressIndicator(
-                                        valueColor:
-                                            AlwaysStoppedAnimation<Color>(
-                                              Colors.orangeAccent,
-                                            ),
-                                        value:
-                                            loadingProgress
-                                                        .expectedTotalBytes !=
-                                                    null
-                                                ? loadingProgress
-                                                        .cumulativeBytesLoaded /
-                                                    loadingProgress
-                                                        .expectedTotalBytes!
-                                                : null,
-                                      ),
-                                    );
-                                  },
-                                  errorBuilder: (context, error, stackTrace) {
-                                    print(
-                                      'Error loading network image from Firebase Storage URL: $error',
-                                    );
-                                    return placeholder;
-                                  },
-                                );
-                              },
-                            );
-                          } else {
-                            productImageWidget = placeholder;
-                          }
-                        } else {
-                          // imageUrl trống
-                          productImageWidget = Image.asset(
-                            'assets/images/coffee_placeholder.png', // Ensure this path is correct
-                            height: 120,
-                            width: 160,
-                            fit: BoxFit.cover,
-                          );
-                        }
+                        // Gọi hàm trợ giúp để lấy widget ảnh
+                        final Widget productImageWidget =
+                            _buildProductImageWidget(product.imageUrl);
 
                         return Container(
                           width: 160,
@@ -315,7 +307,7 @@ class _ProductsState extends State<Products> {
                                   top: Radius.circular(16),
                                 ),
                                 child:
-                                    productImageWidget, // Sử dụng widget ảnh đã xác định
+                                    productImageWidget, // Sử dụng widget ảnh đã được xây dựng
                               ),
                               Padding(
                                 padding: const EdgeInsets.all(8.0),
@@ -334,8 +326,8 @@ class _ProductsState extends State<Products> {
                                     ),
                                     Text(
                                       product.description.isNotEmpty
-                                          ? product.description
-                                          : "Không có mô tả", // Hiển thị mô tả
+                                          ? "Available"
+                                          : "Unavailable",
                                       style: TextStyle(
                                         color: Colors.white54,
                                         fontSize: 12,

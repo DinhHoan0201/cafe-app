@@ -8,19 +8,19 @@ class ProductService {
   final firebase_storage.FirebaseStorage _storage =
       firebase_storage.FirebaseStorage.instance;
 
-  Future<String?> uploadProductImage(File imageFile, String productId) async {
-    try {
-      String extension = imageFile.path.split('.').last;
-      String fileName = 'products/$productId/$productId.$extension';
-      firebase_storage.Reference ref = _storage.ref().child(fileName);
-      firebase_storage.UploadTask uploadTask = ref.putFile(imageFile);
-      await uploadTask;
-      return fileName; // Trả về đường dẫn tương đối trên Storage
-    } catch (e) {
-      print('Error uploading image to Firebase Storage: $e');
-      return null;
-    }
-  }
+  // Future<String?> uploadProductImage(File imageFile, String productId) async {
+  //   try {
+  //     String extension = imageFile.path.split('.').last;
+  //     String fileName = 'products/$productId/$productId.$extension';
+  //     firebase_storage.Reference ref = _storage.ref().child(fileName);
+  //     firebase_storage.UploadTask uploadTask = ref.putFile(imageFile);
+  //     await uploadTask;
+  //     return fileName; // Trả về đường dẫn tương đối trên Storage
+  //   } catch (e) {
+  //     print('Error uploading image to Firebase Storage: $e');
+  //     return null;
+  //   }
+  // }
 
   Future<void> addProduct({
     required String productId,
@@ -28,6 +28,8 @@ class ProductService {
     required String productImageURL,
     required double productPrice,
     required String productDescription,
+    //required String type,
+    required bool status,
     //required String imageUrl, // Đây sẽ là đường dẫn từ Storage hoặc fallback
   }) async {
     try {
@@ -43,6 +45,7 @@ class ProductService {
             'imageUrl': productImageURL,
             'productId': productId,
             'timestamp': FieldValue.serverTimestamp(),
+            'status': status,
           });
     } catch (e) {
       print('Error adding product to Firestore: $e');

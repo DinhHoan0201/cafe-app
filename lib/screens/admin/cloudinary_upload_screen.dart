@@ -4,6 +4,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:myapp/screens/admin/add_products.dart';
+import 'package:myapp/services/cloudinary_service.dart';
 
 class CloudinaryUploadScreen extends StatefulWidget {
   @override
@@ -23,38 +24,13 @@ class _CloudinaryUploadScreenState extends State<CloudinaryUploadScreen> {
         _imageFile = File(pickedFile.path);
       });
 
-      final uploaded = await _uploadImageToCloudinary(_imageFile!);
+      final uploaded = await CloudinaryService.uploadImage(_imageFile!);
       setState(() {
         _uploadedUrl = uploaded;
         if (_uploadedUrl != null) {
           print('Uploaded Image URL: $_uploadedUrl'); // Print the URL here
         }
       });
-    }
-  }
-
-  Future<String?> _uploadImageToCloudinary(File image) async {
-    const cloudName = 'dsospn8r7';
-    const uploadPreset = 'demo_unsigned';
-
-    final url = Uri.parse(
-      'https://api.cloudinary.com/v1_1/$cloudName/image/upload',
-    );
-
-    final request =
-        http.MultipartRequest('POST', url)
-          ..fields['upload_preset'] = uploadPreset
-          ..files.add(await http.MultipartFile.fromPath('file', image.path));
-
-    final response = await request.send();
-
-    if (response.statusCode == 200) {
-      final responseString = await response.stream.bytesToString();
-      final decoded = json.decode(responseString);
-      return decoded['secure_url'];
-    } else {
-      print('Upload failed: ${response.statusCode}');
-      return null;
     }
   }
 

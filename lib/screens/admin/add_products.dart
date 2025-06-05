@@ -6,6 +6,7 @@ import 'package:firebase_storage/firebase_storage.dart'
     as firebase_storage; // Import for Firebase Storage
 import 'package:myapp/constants/firestore_paths.dart'; // Your Firestore paths
 import 'package:myapp/services/product_service.dart';
+import 'package:myapp/screens/admin/cloudinary_upload_screen.dart';
 
 class AddProductScreen extends StatefulWidget {
   const AddProductScreen({super.key});
@@ -20,10 +21,12 @@ class _AddProductScreenState extends State<AddProductScreen> {
   final _productImageURLController = TextEditingController();
   final _productNameController = TextEditingController();
   final _productPriceController = TextEditingController();
-  final _productDescriptionController = TextEditingController(); // Optional
+  final _productDescriptionController = TextEditingController();
+  // final _poductStatusController = TextEditingController(); // Không dùng nữa
 
   //File? _selectedImage; // To store the selected image file
   bool _isUploading = false; // To track upload state
+  bool _productStatus = true; // Mặc định là true (active)
 
   //final ImagePicker _picker = ImagePicker();
   final ProductService _productService = ProductService();
@@ -34,6 +37,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
     _productNameController.dispose();
     _productPriceController.dispose();
     _productDescriptionController.dispose();
+    // _poductStatusController.dispose(); // Không dùng nữa
     super.dispose();
   }
 
@@ -55,6 +59,12 @@ class _AddProductScreenState extends State<AddProductScreen> {
   //     }
   //   }
   // }
+  Future<void> _gotoaddImagepage() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => CloudinaryUploadScreen()),
+    );
+  }
 
   Future<void> _submitProductData() async {
     if (!_formKey.currentState!.validate()) {
@@ -112,6 +122,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
         productPrice: double.tryParse(_productPriceController.text.trim()) ?? 0,
         productDescription: _productDescriptionController.text.trim(),
         //imageUrl: imageReferenceToStore,
+        status: _productStatus, // Truyền giá trị status đã chọn
       );
 
       if (!mounted) return;
@@ -131,6 +142,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
         _productPriceController.clear();
         //_selectedImage = null; // Clear the selected image
         _productDescriptionController.clear();
+        _productStatus = true; // Reset status về mặc định
       });
     } catch (e) {
       if (!mounted) return;
@@ -157,6 +169,10 @@ class _AddProductScreenState extends State<AddProductScreen> {
           child: ListView(
             // Sử dụng ListView để tránh overflow khi bàn phím hiện
             children: <Widget>[
+              ElevatedButton(
+                onPressed: _gotoaddImagepage,
+                child: Text('Đến trang Thêm Sản Phẩm'),
+              ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _productIdController,
@@ -227,6 +243,23 @@ class _AddProductScreenState extends State<AddProductScreen> {
                 ),
                 maxLines: 3,
                 textAlignVertical: TextAlignVertical.top,
+              ),
+              const SizedBox(height: 12),
+              SwitchListTile(
+                title: const Text('Trạng thái sản phẩm (Active/Inactive)'),
+                value: _productStatus,
+                onChanged: (bool value) {
+                  setState(() {
+                    _productStatus = value;
+                  });
+                },
+                activeColor: Theme.of(context).primaryColor,
+                secondary: Icon(
+                  _productStatus
+                      ? Icons.check_circle
+                      : Icons.remove_circle_outline,
+                ),
+                subtitle: Text(_productStatus ? 'Available' : 'Unavailable'),
               ),
               const SizedBox(height: 20),
               ElevatedButton.icon(
