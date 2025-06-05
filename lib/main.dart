@@ -34,10 +34,11 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Flutter Firebase Demo',
-      debugShowCheckedModeBanner: false, // Optional: hide debug banner
-      // Set your desired starting screen here
-      //home: const Products(), // Start with Welcomepage
-      home: const Loginpage(), // Hoặc WelcomePage() nếu bạn muốn bắt đầu từ đó
+      debugShowCheckedModeBanner: false,
+      //home: const Products(),
+      home: const Loginpage(),
+      //home: const AddProductScreen(),
+      //home: CloudinaryUploadScreen(),
     );
   }
 }

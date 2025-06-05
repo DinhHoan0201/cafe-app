@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:myapp/constants/firestore_paths.dart';
 import 'package:myapp/screens/admin/add_products.dart';
 import 'home_screen.dart';
+import "package:myapp/screens/products.dart";
 
 class Loginpage extends StatefulWidget {
   // Changed to StatefulWidget
@@ -45,7 +46,6 @@ class _LoginpageState extends State<Loginpage> {
             );
 
         if (userCredential.user != null) {
-          // Fetch user role from Firestore
           DocumentSnapshot userDoc =
               await FirebaseFirestore.instance
                   .collection(FirestorePaths.topLevelCfdb)
@@ -57,9 +57,7 @@ class _LoginpageState extends State<Loginpage> {
           if (mounted) {
             if (userDoc.exists) {
               final userData = userDoc.data() as Map<String, dynamic>;
-              // Assuming 'role' is true for admin, false for regular user
               final bool isAdmin = userData['role'] == true;
-
               if (isAdmin) {
                 print('Admin login successful');
                 Navigator.pushReplacement(
@@ -72,12 +70,10 @@ class _LoginpageState extends State<Loginpage> {
                 print('User login successful');
                 Navigator.pushReplacement(
                   context,
-                  MaterialPageRoute(builder: (context) => const HomeScreen()),
+                  MaterialPageRoute(builder: (context) => const Products()),
                 );
               }
             } else {
-              // User authenticated but no Firestore record, handle as needed
-              // For now, default to user or show error
               _errorMessage = 'Không tìm thấy thông tin người dùng.';
               print(
                 'User record not found in Firestore for UID: ${userCredential.user!.uid}',

@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart'; // Import for image picking
 import 'package:firebase_storage/firebase_storage.dart'
     as firebase_storage; // Import for Firebase Storage
 import 'package:myapp/constants/firestore_paths.dart'; // Your Firestore paths
+import 'package:myapp/services/product_service.dart';
 
 class AddProductScreen extends StatefulWidget {
   const AddProductScreen({super.key});
@@ -16,70 +17,44 @@ class _AddProductScreenState extends State<AddProductScreen> {
   final _formKey = GlobalKey<FormState>();
 
   final _productIdController = TextEditingController();
+  final _productImageURLController = TextEditingController();
   final _productNameController = TextEditingController();
   final _productPriceController = TextEditingController();
   final _productDescriptionController = TextEditingController(); // Optional
 
-  File? _selectedImage; // To store the selected image file
+  //File? _selectedImage; // To store the selected image file
   bool _isUploading = false; // To track upload state
 
-  final ImagePicker _picker = ImagePicker();
-
+  //final ImagePicker _picker = ImagePicker();
+  final ProductService _productService = ProductService();
   @override
   void dispose() {
     _productIdController.dispose();
+    _productImageURLController.dispose();
     _productNameController.dispose();
     _productPriceController.dispose();
     _productDescriptionController.dispose();
     super.dispose();
   }
 
-  Future<void> _pickImage() async {
-    final XFile? pickedFile = await _picker.pickImage(
-      source: ImageSource.gallery,
-    );
+  // Future<void> _pickImage() async {
+  //   final XFile? pickedFile = await _picker.pickImage(
+  //     source: ImageSource.gallery,
+  //   );
 
-    if (pickedFile != null) {
-      setState(() {
-        _selectedImage = File(pickedFile.path);
-      });
-    } else {
-      // User canceled the picker
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Không có ảnh nào được chọn.')),
-        );
-      }
-    }
-  }
-
-  Future<String?> _uploadImageToStorage(
-    File imageFile,
-    String productId,
-  ) async {
-    try {
-      // Lấy phần mở rộng của tệp gốc (ví dụ: "jpg", "png")
-      String extension = imageFile.path.split('.').last; // Lấy đuôi file gốc
-      String fileName =
-          'products/$productId/$productId.$extension'; // Tạo tên file mới có dạng products/ID/ID.đuôi_file
-
-      firebase_storage.Reference ref = firebase_storage.FirebaseStorage.instance
-          .ref()
-          .child(fileName);
-
-      firebase_storage.UploadTask uploadTask = ref.putFile(imageFile);
-      await uploadTask;
-      return fileName;
-    } catch (e) {
-      print('Error uploading image to Firebase Storage: $e');
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Lỗi tải ảnh lên máy chủ: $e')));
-      }
-      return null; // Trả về null nếu có lỗi
-    }
-  }
+  //   if (pickedFile != null) {
+  //     setState(() {
+  //       _selectedImage = File(pickedFile.path);
+  //     });
+  //   } else {
+  //     // User canceled the picker
+  //     if (mounted) {
+  //       ScaffoldMessenger.of(context).showSnackBar(
+  //         const SnackBar(content: Text('Không có ảnh nào được chọn.')),
+  //       );
+  //     }
+  //   }
+  // }
 
   Future<void> _submitProductData() async {
     if (!_formKey.currentState!.validate()) {
@@ -91,69 +66,53 @@ class _AddProductScreenState extends State<AddProductScreen> {
 
     try {
       String productId = _productIdController.text.trim();
-      String productName =
-          _productNameController.text.trim(); // Lấy tên sản phẩm
-
+      String productImageURL = _productImageURLController.text.trim();
+      String productName = _productNameController.text.trim();
       String imageReferenceToStore;
       String dynamicFallbackIdentifier =
           "${productName.toLowerCase().replaceAll(' ', '')}$productId";
 
-      // 1. Xử lý ảnh
-      if (_selectedImage == null) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                'Không có ảnh được chọn. Sử dụng định danh thay thế: $dynamicFallbackIdentifier',
-              ),
-            ),
-          );
-        }
-        imageReferenceToStore = dynamicFallbackIdentifier;
-      } else {
-        // Đã chọn ảnh, tiến hành tải lên
-        // _uploadImageToStorage bây giờ trả về đường dẫn tương đối
-        String? uploadedRelativePath = await _uploadImageToStorage(
-          _selectedImage!,
-          productId,
-        );
+      // if (_selectedImage == null) {
+      //   if (mounted) {
+      //     ScaffoldMessenger.of(context).showSnackBar(
+      //       SnackBar(
+      //         content: Text(
+      //           'Không có ảnh được chọn. Sử dụng định danh thay thế: $dynamicFallbackIdentifier',
+      //         ),
+      //       ),
+      //     );
+      //   }
+      //   imageReferenceToStore = dynamicFallbackIdentifier;
+      // } else {
+      //   String? uploadedRelativePath = await _productService.uploadProductImage(
+      //     _selectedImage!,
+      //     productId,
+      //   );
 
-        if (uploadedRelativePath != null) {
-          imageReferenceToStore =
-              uploadedRelativePath; // Lưu đường dẫn thật nếu tải lên thành công
-        } else {
-          // Tải ảnh thất bại, _uploadImageToStorage đã hiển thị SnackBar lỗi.
-          // Sử dụng định danh tùy chỉnh làm fallback.
-          imageReferenceToStore = dynamicFallbackIdentifier;
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  'Lỗi tải ảnh lên. Sử dụng định danh thay thế: $dynamicFallbackIdentifier',
-                ),
-              ),
-            );
-          }
-        }
-      }
+      //   if (uploadedRelativePath != null) {
+      //     imageReferenceToStore = uploadedRelativePath;
+      //   } else {
+      //     imageReferenceToStore = dynamicFallbackIdentifier;
+      //     if (mounted) {
+      //       ScaffoldMessenger.of(context).showSnackBar(
+      //         SnackBar(
+      //           content: Text(
+      //             'Lỗi tải ảnh lên. Sử dụng định danh thay thế: $dynamicFallbackIdentifier',
+      //           ),
+      //         ),
+      //       );
+      //     }
+      //   }
+      // }
 
-      await FirebaseFirestore.instance
-          .collection(FirestorePaths.topLevelCfdb)
-          .doc(FirestorePaths.defaultParentInCfdb)
-          .collection(FirestorePaths.productsSubCollection)
-          .doc(
-            productId,
-          ) // Sử dụng ID sản phẩm người dùng nhập (ví dụ: "01", "02")
-          .set({
-            'name': _productNameController.text.trim(),
-            'price':
-                double.tryParse(_productPriceController.text.trim()) ?? 0.0,
-            'description': _productDescriptionController.text.trim(),
-            'imageUrl':
-                imageReferenceToStore, // Lưu đường dẫn thật hoặc định danh tùy chỉnh
-            'productId': productId, // Lưu lại ID để dễ truy vấn nếu cần
-            'timestamp': FieldValue.serverTimestamp(),
-          });
+      await _productService.addProduct(
+        productId: productId,
+        productName: productName,
+        productImageURL: productImageURL,
+        productPrice: double.tryParse(_productPriceController.text.trim()) ?? 0,
+        productDescription: _productDescriptionController.text.trim(),
+        //imageUrl: imageReferenceToStore,
+      );
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -167,9 +126,10 @@ class _AddProductScreenState extends State<AddProductScreen> {
       _formKey.currentState!.reset();
       setState(() {
         _productIdController.clear();
+        _productImageURLController.clear();
         _productNameController.clear();
         _productPriceController.clear();
-        _selectedImage = null; // Clear the selected image
+        //_selectedImage = null; // Clear the selected image
         _productDescriptionController.clear();
       });
     } catch (e) {
@@ -197,35 +157,6 @@ class _AddProductScreenState extends State<AddProductScreen> {
           child: ListView(
             // Sử dụng ListView để tránh overflow khi bàn phím hiện
             children: <Widget>[
-              GestureDetector(
-                onTap: _pickImage, // Gọi hàm chọn ảnh khi nhấn vào
-                child: Container(
-                  height: 150,
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[300],
-                    border: Border.all(color: Colors.grey[400]!),
-                  ),
-                  child:
-                      _selectedImage != null
-                          ? Image.file(_selectedImage!, fit: BoxFit.cover)
-                          : Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.camera_alt,
-                                size: 50,
-                                color: Colors.grey[600],
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                'Chạm để chọn ảnh',
-                                style: TextStyle(color: Colors.grey[700]),
-                              ),
-                            ],
-                          ),
-                ),
-              ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _productIdController,
@@ -237,6 +168,19 @@ class _AddProductScreenState extends State<AddProductScreen> {
                     (value) =>
                         (value == null || value.isEmpty)
                             ? 'Vui lòng nhập ID sản phẩm'
+                            : null,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _productImageURLController,
+                decoration: const InputDecoration(
+                  labelText: 'Image URL (tùy chọn)',
+                  border: OutlineInputBorder(),
+                ),
+                validator:
+                    (value) =>
+                        (value == null || value.isEmpty)
+                            ? 'Vui lòng nhập Image URL'
                             : null,
               ),
               const SizedBox(height: 12),

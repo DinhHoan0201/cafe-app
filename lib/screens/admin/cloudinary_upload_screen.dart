@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:myapp/screens/admin/add_products.dart';
 
 class CloudinaryUploadScreen extends StatefulWidget {
   @override
@@ -12,7 +13,6 @@ class CloudinaryUploadScreen extends StatefulWidget {
 class _CloudinaryUploadScreenState extends State<CloudinaryUploadScreen> {
   File? _imageFile;
   String? _uploadedUrl;
-
   Future<void> _pickImage() async {
     final pickedFile = await ImagePicker().pickImage(
       source: ImageSource.gallery,
@@ -34,9 +34,8 @@ class _CloudinaryUploadScreenState extends State<CloudinaryUploadScreen> {
   }
 
   Future<String?> _uploadImageToCloudinary(File image) async {
-    const cloudName = 'dsospn8r7'; // 🔁 Thay bằng Cloud name của bạn
-    const uploadPreset =
-        'demo_unsigned'; // 🔁 Thay bằng upload preset (unsigned)
+    const cloudName = 'dsospn8r7';
+    const uploadPreset = 'demo_unsigned';
 
     final url = Uri.parse(
       'https://api.cloudinary.com/v1_1/$cloudName/image/upload',
@@ -59,6 +58,13 @@ class _CloudinaryUploadScreenState extends State<CloudinaryUploadScreen> {
     }
   }
 
+  Future<void> _backtoAddProduct() async {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const AddProductScreen()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -71,6 +77,8 @@ class _CloudinaryUploadScreenState extends State<CloudinaryUploadScreen> {
               onPressed: _pickImage,
               child: Text('Chọn ảnh & Upload'),
             ),
+            SizedBox(height: 20), // Thêm khoảng cách
+
             SizedBox(height: 20),
             if (_uploadedUrl != null) ...[
               Text(
@@ -92,6 +100,11 @@ class _CloudinaryUploadScreenState extends State<CloudinaryUploadScreen> {
                 ),
               ),
             ],
+            SizedBox(height: 20), // Thêm khoảng cách
+            ElevatedButton(
+              onPressed: _backtoAddProduct,
+              child: Text('Quay lại Thêm Sản Phẩm'),
+            ),
           ],
         ),
       ),
