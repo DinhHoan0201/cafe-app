@@ -52,7 +52,6 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             const Text('Welcome! You are logged in as:'),
             if (user != null) ...[
-              
               const SizedBox(height: 10),
               Text('Email: ${user.email}'),
             ],

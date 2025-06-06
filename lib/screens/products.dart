@@ -1,48 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
-import 'package:myapp/constants/firestore_paths.dart'; // Assuming this file exists and has correct paths
-
-// Define a Product model (you can move this to a separate file, e.g., models/product_model.dart)
+import 'package:myapp/models/product_model.dart';
+import 'package:myapp/constants/firestore_paths.dart';
 
 class Products extends StatefulWidget {
   const Products({super.key});
 
   @override
   State<Products> createState() => _ProductsState();
-}
-
-class Product {
-  final String id;
-  final String name;
-  final double price;
-  final String description;
-  final String imageUrl; // Can be a relative path or an identifier
-  final Timestamp timestamp;
-  final bool status;
-
-  Product({
-    required this.id,
-    required this.name,
-    required this.price,
-    required this.description,
-    required this.imageUrl,
-    required this.timestamp,
-    required this.status,
-  });
-
-  factory Product.fromFirestore(DocumentSnapshot<Map<String, dynamic>> doc) {
-    final data = doc.data()!;
-    return Product(
-      id: data['productId'] ?? doc.id,
-      name: data['name'] ?? 'Unnamed Product',
-      price: (data['price'] ?? 0).toDouble(),
-      description: data['description'] ?? '',
-      status: data['status'] ?? true,
-      imageUrl: data['imageUrl'] ?? '',
-      timestamp: data['timestamp'] ?? Timestamp.now(),
-    );
-  }
 }
 
 class _ProductsState extends State<Products> {

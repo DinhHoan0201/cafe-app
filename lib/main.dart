@@ -1,14 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:myapp/screens/loginpage.dart';
 import 'package:myapp/screens/products.dart';
-// Import your actual starting screen
 import 'screens/welcomepage.dart';
-// Đảm bảo import đúng file
-// import 'screens/signup_page.dart';
 import 'screens/home_screen.dart';
-import 'screens/products.dart';
-import 'package:firebase_core/firebase_core.dart'; // Import Firebase Core
-import 'firebase_options.dart'; // Import the *correctly generated* options
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 import 'screens/admin/add_products.dart';
 import 'screens/admin/cloudinary_upload_screen.dart';
 
