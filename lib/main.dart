@@ -31,10 +31,11 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Flutter Firebase Demo',
       debugShowCheckedModeBanner: false,
-      home: const Products(),
+      //home: const Products(),
       //home: const Loginpage(),
       //home: const AddProductScreen(),
       //home: CloudinaryUploadScreen(),
+      home: Welcomepage(),
     );
   }
 }

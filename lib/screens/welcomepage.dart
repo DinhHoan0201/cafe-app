@@ -23,10 +23,14 @@ class Welcomepage extends StatelessWidget {
         ),
         child: Center(
           child: SvgPicture.asset(
-            "assets/icons/An.svg", // Double-check this path!
-            width: 100,
-            height: 100,
+            "assets/icons/App_Logo.svg",
+            width: 250,
+            height: 250,
             fit: BoxFit.contain,
+            colorFilter: ColorFilter.mode(
+              Colors.white.withOpacity(0.65),
+              BlendMode.srcIn,
+            ),
           ),
         ),
       ),

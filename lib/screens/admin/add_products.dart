@@ -22,13 +22,11 @@ class _AddProductScreenState extends State<AddProductScreen> {
   final _productNameController = TextEditingController();
   final _productPriceController = TextEditingController();
   final _productDescriptionController = TextEditingController();
-  // final _poductStatusController = TextEditingController(); // Không dùng nữa
+  final _productTypeController = TextEditingController();
 
-  //File? _selectedImage; // To store the selected image file
   bool _isUploading = false; // To track upload state
   bool _productStatus = true; // Mặc định là true (active)
 
-  //final ImagePicker _picker = ImagePicker();
   final ProductService _productService = ProductService();
   @override
   void dispose() {
@@ -37,28 +35,10 @@ class _AddProductScreenState extends State<AddProductScreen> {
     _productNameController.dispose();
     _productPriceController.dispose();
     _productDescriptionController.dispose();
-    // _poductStatusController.dispose(); // Không dùng nữa
+    _productTypeController.dispose();
     super.dispose();
   }
 
-  // Future<void> _pickImage() async {
-  //   final XFile? pickedFile = await _picker.pickImage(
-  //     source: ImageSource.gallery,
-  //   );
-
-  //   if (pickedFile != null) {
-  //     setState(() {
-  //       _selectedImage = File(pickedFile.path);
-  //     });
-  //   } else {
-  //     // User canceled the picker
-  //     if (mounted) {
-  //       ScaffoldMessenger.of(context).showSnackBar(
-  //         const SnackBar(content: Text('Không có ảnh nào được chọn.')),
-  //       );
-  //     }
-  //   }
-  // }
   Future<void> _gotoaddImagepage() async {
     await Navigator.push(
       context,
@@ -78,43 +58,10 @@ class _AddProductScreenState extends State<AddProductScreen> {
       String productId = _productIdController.text.trim();
       String productImageURL = _productImageURLController.text.trim();
       String productName = _productNameController.text.trim();
+      String productType = _productTypeController.text.trim();
       String imageReferenceToStore;
       String dynamicFallbackIdentifier =
           "${productName.toLowerCase().replaceAll(' ', '')}$productId";
-
-      // if (_selectedImage == null) {
-      //   if (mounted) {
-      //     ScaffoldMessenger.of(context).showSnackBar(
-      //       SnackBar(
-      //         content: Text(
-      //           'Không có ảnh được chọn. Sử dụng định danh thay thế: $dynamicFallbackIdentifier',
-      //         ),
-      //       ),
-      //     );
-      //   }
-      //   imageReferenceToStore = dynamicFallbackIdentifier;
-      // } else {
-      //   String? uploadedRelativePath = await _productService.uploadProductImage(
-      //     _selectedImage!,
-      //     productId,
-      //   );
-
-      //   if (uploadedRelativePath != null) {
-      //     imageReferenceToStore = uploadedRelativePath;
-      //   } else {
-      //     imageReferenceToStore = dynamicFallbackIdentifier;
-      //     if (mounted) {
-      //       ScaffoldMessenger.of(context).showSnackBar(
-      //         SnackBar(
-      //           content: Text(
-      //             'Lỗi tải ảnh lên. Sử dụng định danh thay thế: $dynamicFallbackIdentifier',
-      //           ),
-      //         ),
-      //       );
-      //     }
-      //   }
-      // }
-
       await _productService.addProduct(
         productId: productId,
         productName: productName,
@@ -122,7 +69,8 @@ class _AddProductScreenState extends State<AddProductScreen> {
         productPrice: double.tryParse(_productPriceController.text.trim()) ?? 0,
         productDescription: _productDescriptionController.text.trim(),
         //imageUrl: imageReferenceToStore,
-        status: _productStatus, // Truyền giá trị status đã chọn
+        status: _productStatus,
+        type: _productTypeController.text.trim(),
       );
 
       if (!mounted) return;
@@ -140,9 +88,9 @@ class _AddProductScreenState extends State<AddProductScreen> {
         _productImageURLController.clear();
         _productNameController.clear();
         _productPriceController.clear();
-        //_selectedImage = null; // Clear the selected image
         _productDescriptionController.clear();
-        _productStatus = true; // Reset status về mặc định
+        _productStatus = true;
+        _productTypeController.clear();
       });
     } catch (e) {
       if (!mounted) return;
@@ -210,6 +158,19 @@ class _AddProductScreenState extends State<AddProductScreen> {
                     (value) =>
                         (value == null || value.isEmpty)
                             ? 'Vui lòng nhập tên sản phẩm'
+                            : null,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _productTypeController,
+                decoration: const InputDecoration(
+                  labelText: 'Loại Sản Phẩm',
+                  border: OutlineInputBorder(),
+                ),
+                validator:
+                    (value) =>
+                        (value == null || value.isEmpty)
+                            ? 'Vui lòng nhập loạisản phẩm'
                             : null,
               ),
               const SizedBox(height: 12),

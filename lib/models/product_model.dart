@@ -8,6 +8,8 @@ class Product {
   final String imageUrl; // Can be a relative path or an identifier
   final Timestamp timestamp;
   final bool status;
+  final double sale;
+  final String type;
 
   Product({
     required this.id,
@@ -17,6 +19,8 @@ class Product {
     required this.imageUrl,
     required this.timestamp,
     required this.status,
+    required this.sale,
+    required this.type,
   });
 
   factory Product.fromFirestore(DocumentSnapshot<Map<String, dynamic>> doc) {
@@ -29,6 +33,8 @@ class Product {
       status: data['status'] ?? true,
       imageUrl: data['imageUrl'] ?? '',
       timestamp: data['timestamp'] ?? Timestamp.now(),
+      sale: (data['sale'] ?? 0).toDouble(),
+      type: data['type'] ?? '',
     );
   }
 }

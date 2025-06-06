@@ -28,7 +28,7 @@ class ProductService {
     required String productImageURL,
     required double productPrice,
     required String productDescription,
-    //required String type,
+    required String type,
     required bool status,
     //required String imageUrl, // Đây sẽ là đường dẫn từ Storage hoặc fallback
   }) async {
@@ -46,6 +46,8 @@ class ProductService {
             'productId': productId,
             'timestamp': FieldValue.serverTimestamp(),
             'status': status,
+            //'sale': 0.0,
+            'type': type,
           });
     } catch (e) {
       print('Error adding product to Firestore: $e');

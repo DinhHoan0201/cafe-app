@@ -85,5 +85,4 @@ class DefaultFirebaseOptions {
     storageBucket: 'cfdb-17821.firebasestorage.app',
     measurementId: 'G-BTMHEH0JMW',
   );
-
 }
