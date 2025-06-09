@@ -1,10 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:myapp/features/product/views/product_list_screen.dart';
 import 'signup_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:myapp/core/constants/firestore_paths.dart';
-import 'package:myapp/features/product/views/add_products_screen.dart';
-//import 'home_screen.dart';
 import "package:myapp/features/product/views/products_screen.dart";
 
 class Loginpage extends StatefulWidget {
@@ -63,7 +62,7 @@ class _LoginpageState extends State<Loginpage> {
                 Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => const AddProductScreen(),
+                    builder: (context) => const ProductListScreen(),
                   ),
                 );
               } else {

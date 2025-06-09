@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 import 'package:myapp/core/constants/firestore_paths.dart';
@@ -57,6 +56,51 @@ class ProductService {
       return products;
     } catch (e) {
       print('Error fetching products from Firestore: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> updateProduct({
+    required String productId,
+    required String productName,
+    required String productImageURL,
+    required double productPrice,
+    required String productDescription,
+    required String type,
+    required bool status,
+  }) async {
+    try {
+      await _firestore
+          .collection(FirestorePaths.topLevelCfdb)
+          .doc(FirestorePaths.defaultParentInCfdb)
+          .collection(FirestorePaths.productsSubCollection)
+          .doc(productId)
+          .update({
+            'name': productName,
+            'price': productPrice,
+            'description': productDescription,
+            'imageUrl': productImageURL,
+            'status': status,
+            'type': type,
+            'timestamp':
+                FieldValue.serverTimestamp(), // Cập nhật timestamp khi sửa đổi
+          });
+    } catch (e) {
+      print('Error updating product in Firestore: $e');
+      rethrow; // Ném lại lỗi để UI có thể xử lý
+    }
+  }
+
+  Future<void> deleteProduct({required String productId}) async {
+    try {
+      await _firestore
+          .collection(FirestorePaths.topLevelCfdb)
+          .doc(FirestorePaths.defaultParentInCfdb)
+          .collection(FirestorePaths.productsSubCollection)
+          .doc(productId)
+          .delete();
+    } catch (e) {
+      print('Error delete product in Firestore: $e');
       rethrow;
     }
   }
