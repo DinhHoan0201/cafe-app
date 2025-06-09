@@ -1,11 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'signup_page.dart';
+import 'signup_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:myapp/constants/firestore_paths.dart';
-import 'package:myapp/screens/admin/add_products.dart';
+import 'package:myapp/core/constants/firestore_paths.dart';
+import 'package:myapp/features/product/views/add_products_screen.dart';
 //import 'home_screen.dart';
-import "package:myapp/screens/products.dart";
+import "package:myapp/features/product/views/products_screen.dart";
 
 class Loginpage extends StatefulWidget {
   // Changed to StatefulWidget

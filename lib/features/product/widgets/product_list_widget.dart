@@ -1,63 +1,52 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:myapp/models/product_model.dart';
-import 'package:myapp/widgets/product/product_image_widget.dart'; // Import hàm build ảnh
+import 'package:myapp/features/product/model/product_model.dart';
+import 'package:myapp/features/product/widgets/product_image_widget.dart';
 
 class ProductList extends StatelessWidget {
-  final Stream<QuerySnapshot<Map<String, dynamic>>> productStream;
+  final List<Product> products;
   final String searchQuery;
+  final String? selectedCategoryName;
   const ProductList({
     super.key,
-    required this.productStream,
+    required this.products,
     required this.searchQuery,
+    this.selectedCategoryName,
   });
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
       height: 250,
-      child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-        stream: productStream,
-        builder: (context, snapshot) {
-          if (snapshot.hasError) {
+      child: Builder(
+        builder: (context) {
+          if (products.isEmpty) {
             return const Center(
               child: Text(
-                'Không tìm thấy sản phẩm nào.',
+                'Không có sản phẩm nào.',
                 style: TextStyle(color: Colors.white54),
               ),
             );
           }
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(
-              child: CircularProgressIndicator(color: Colors.orangeAccent),
-            );
+
+          List<Product> filteredProducts = List.from(products);
+
+          // 1. Lọc theo category trước
+          if (selectedCategoryName != null) {
+            filteredProducts =
+                filteredProducts
+                    .where((product) => product.name == selectedCategoryName)
+                    .toList();
           }
 
-          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            if (searchQuery.isEmpty) {
-              return const Center(
-                child: Text(
-                  'Không có sản phẩm nào.',
-                  style: TextStyle(color: Colors.white54),
-                ),
-              );
-            }
-          }
-
-          List<DocumentSnapshot<Map<String, dynamic>>> productDocs =
-              snapshot.data?.docs ?? [];
-          List<DocumentSnapshot<Map<String, dynamic>>> displayDocs =
-              productDocs;
-
+          // 2. Sau đó lọc theo searchQuery trên danh sách đã lọc theo category
           if (searchQuery.isNotEmpty) {
             final lowerCaseQuery = searchQuery.toLowerCase();
-            displayDocs =
-                productDocs.where((docSnapshot) {
-                  final product = Product.fromFirestore(docSnapshot);
+            filteredProducts =
+                filteredProducts.where((product) {
                   final nameMatches = product.name.toLowerCase().contains(
                     lowerCaseQuery,
                   );
-
                   final typeMatches = product.type.toLowerCase().contains(
                     lowerCaseQuery,
                   );
@@ -65,10 +54,10 @@ class ProductList extends StatelessWidget {
                 }).toList();
           }
 
-          if (displayDocs.isEmpty) {
+          if (filteredProducts.isEmpty) {
             return const Center(
               child: Text(
-                'Không tìm thấy sản phẩm nào.',
+                'Không tìm thấy sản phẩm nào khớp với lựa chọn.', // Cập nhật thông báo
                 style: TextStyle(color: Colors.white54),
               ),
             );
@@ -76,10 +65,9 @@ class ProductList extends StatelessWidget {
 
           return ListView.builder(
             scrollDirection: Axis.horizontal,
-            itemCount: displayDocs.length,
+            itemCount: filteredProducts.length,
             itemBuilder: (context, index) {
-              final productData = displayDocs[index];
-              final product = Product.fromFirestore(productData);
+              final product = filteredProducts[index];
               final Widget productImageWidget = buildProductImageWidget(
                 product.imageUrl,
               );

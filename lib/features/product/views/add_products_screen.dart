@@ -4,9 +4,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:image_picker/image_picker.dart'; // Import for image picking
 import 'package:firebase_storage/firebase_storage.dart'
     as firebase_storage; // Import for Firebase Storage
-import 'package:myapp/constants/firestore_paths.dart'; // Your Firestore paths
-import 'package:myapp/services/product_service.dart';
-import 'package:myapp/screens/admin/cloudinary_upload_screen.dart';
+import 'package:myapp/core/constants/firestore_paths.dart'; // Your Firestore paths
+import 'package:myapp/features/product/data/product_service.dart';
+import 'package:myapp/features/admin/view/cloudinary_upload_screen.dart';
 
 class AddProductScreen extends StatefulWidget {
   const AddProductScreen({super.key});
@@ -40,10 +40,17 @@ class _AddProductScreenState extends State<AddProductScreen> {
   }
 
   Future<void> _gotoaddImagepage() async {
-    await Navigator.push(
+    // Chờ kết quả trả về từ CloudinaryUploadScreen
+    final String? uploadedImageUrl = await Navigator.push<String>(
       context,
       MaterialPageRoute(builder: (context) => CloudinaryUploadScreen()),
     );
+
+    if (uploadedImageUrl != null && uploadedImageUrl.isNotEmpty) {
+      setState(() {
+        _productImageURLController.text = uploadedImageUrl;
+      });
+    }
   }
 
   Future<void> _submitProductData() async {
@@ -119,7 +126,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
             children: <Widget>[
               ElevatedButton(
                 onPressed: _gotoaddImagepage,
-                child: Text('Đến trang Thêm Sản Phẩm'),
+                child: Text('Upload Ảnh Sản Phẩm (Cloudinary)'),
               ),
               const SizedBox(height: 16),
               TextFormField(

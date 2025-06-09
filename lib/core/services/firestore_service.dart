@@ -2,13 +2,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 class FirestoreService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
-  // Future<DocumentSnapshot> getDocument({
-  //   required String collectionPath,
-  //   required String documentId,
-  // }) {
-  //   return _db.collection(collectionPath).doc(documentId).get();
-  // }
-
   Future<DocumentSnapshot> getDocumentFromSubCollection({
     required String topLevelCollection,
     required String parentDocId,

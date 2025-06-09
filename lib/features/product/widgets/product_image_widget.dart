@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
-import 'dart:developer' as developer; // Import để ghi log chi tiết
+import 'dart:developer' as developer;
 
-// Hàm trợ giúp chính để xây dựng widget ảnh sản phẩm
 Widget buildProductImageWidget(String imageUrl) {
-  // Định nghĩa kích thước ảnh và widget placeholder một lần
   const double imageHeight = 120;
   const double imageWidth = 160;
   final Widget placeholder = Image.asset(
@@ -15,10 +13,9 @@ Widget buildProductImageWidget(String imageUrl) {
   );
 
   if (imageUrl.isEmpty) {
-    return placeholder; // Nếu không có URL, hiển thị placeholder
+    return placeholder;
   }
 
-  // Hàm xử lý lỗi chung cho Image.network
   Widget imageNetworkErrorBuilder(
     BuildContext context,
     Object error,
@@ -29,8 +26,8 @@ Widget buildProductImageWidget(String imageUrl) {
     developer.log(
       'Image Network Error: $error for URL: $logUrl',
       name: 'ProductImageWidget',
-    ); // Log lỗi tải ảnh
-    return placeholder; // Hiển thị placeholder khi có lỗi
+    );
+    return placeholder;
   }
 
   if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {

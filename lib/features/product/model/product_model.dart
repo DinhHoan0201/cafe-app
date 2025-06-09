@@ -5,7 +5,7 @@ class Product {
   final String name;
   final double price;
   final String description;
-  final String imageUrl; // Can be a relative path or an identifier
+  final String imageUrl;
   final Timestamp timestamp;
   final bool status;
   final double sale;

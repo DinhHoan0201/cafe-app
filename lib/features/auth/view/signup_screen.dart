@@ -1,25 +1,23 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:myapp/constants/firestore_paths.dart';
-// Import your login page if you need to navigate back
-import 'loginpage.dart';
+import 'package:myapp/core/constants/firestore_paths.dart';
+import 'login_screen.dart';
 
 class SignupPage extends StatefulWidget {
   // Changed class name
   const SignupPage({super.key});
 
   @override
-  State<SignupPage> createState() => _SignupPageState(); // Changed state class name
+  State<SignupPage> createState() => _SignupPageState();
 }
 
 class _SignupPageState extends State<SignupPage> {
-  final _formKey = GlobalKey<FormState>(); // Added for Form validation
+  final _formKey = GlobalKey<FormState>();
   final _usernameController = TextEditingController();
-  final _emailController = TextEditingController(); // Added email controller
+  final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _confirmPasswordController =
-      TextEditingController(); // Added confirm password
+  final _confirmPasswordController = TextEditingController();
 
   bool _isPasswordVisible = false;
   bool _isConfirmPasswordVisible = false; // For confirm password field

@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:myapp/screens/admin/add_products.dart';
-import 'package:myapp/services/cloudinary_service.dart';
+import 'package:myapp/features/product/views/add_products_screen.dart';
+import 'package:myapp/core/services/cloudinary_service.dart';
 
 class CloudinaryUploadScreen extends StatefulWidget {
   @override
@@ -27,17 +27,15 @@ class _CloudinaryUploadScreenState extends State<CloudinaryUploadScreen> {
       final uploaded = await CloudinaryService.uploadImage(_imageFile!);
       setState(() {
         _uploadedUrl = uploaded;
-        if (_uploadedUrl != null) {
-          print('Uploaded Image URL: $_uploadedUrl'); // Print the URL here
-        }
       });
     }
   }
 
-  Future<void> _backtoAddProduct() async {
-    Navigator.pushReplacement(
+  // Thay đổi: Hàm này sẽ pop và trả về URL đã upload
+  void _confirmAndReturnUrl() {
+    Navigator.pop(
       context,
-      MaterialPageRoute(builder: (context) => const AddProductScreen()),
+      _uploadedUrl, // Trả về URL đã upload
     );
   }
 
@@ -78,8 +76,12 @@ class _CloudinaryUploadScreenState extends State<CloudinaryUploadScreen> {
             ],
             SizedBox(height: 20), // Thêm khoảng cách
             ElevatedButton(
-              onPressed: _backtoAddProduct,
-              child: Text('Quay lại Thêm Sản Phẩm'),
+              onPressed: _uploadedUrl != null ? _confirmAndReturnUrl : null,
+              child: Text(
+                _uploadedUrl != null
+                    ? 'Xác nhận ảnh & Quay lại'
+                    : 'Chưa có ảnh nào được upload',
+              ),
             ),
           ],
         ),

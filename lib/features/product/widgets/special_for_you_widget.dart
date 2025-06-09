@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:myapp/models/product_model.dart';
-import 'package:myapp/widgets/product/product_image_widget.dart'; // Import hàm build ảnh
+import 'package:myapp/features/product/model/product_model.dart';
+import 'package:myapp/features/product/widgets/product_image_widget.dart'; // Import hàm build ảnh
 
 class SpecialForYouSection extends StatelessWidget {
-  final CollectionReference<Map<String, dynamic>> productsCollection;
+  final List<Product> allProducts; // Thay đổi: Nhận List<Product>
 
-  const SpecialForYouSection({super.key, required this.productsCollection});
+  const SpecialForYouSection({
+    super.key,
+    required this.allProducts,
+  }); // Thay đổi
 
   @override
   Widget build(BuildContext context) {
@@ -22,28 +24,35 @@ class SpecialForYouSection extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 10),
-        StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-          stream:
-              productsCollection
-                  .orderBy('sale', descending: true) // Giả sử sắp xếp theo sale
-                  .limit(2) // Lấy 2 sản phẩm
-                  .snapshots(),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
+        Builder(
+          // Sử dụng Builder hoặc kiểm tra allProducts.isEmpty trực tiếp
+          builder: (context) {
+            if (allProducts.isEmpty) {
               return const Center(
-                child: SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: Colors.orangeAccent,
-                  ),
+                child: Text(
+                  'Không có sản phẩm đặc biệt nào.', // Hoặc 'Đang tải...'
+                  style: TextStyle(color: Colors.white54),
                 ),
               );
             }
-            if (snapshot.hasError ||
-                !snapshot.hasData ||
-                snapshot.data!.docs.isEmpty) {
+
+            // Lọc và sắp xếp sản phẩm đặc biệt từ allProducts
+            // Ví dụ: lấy sản phẩm có 'sale' > 0 (hoặc một trường 'isSpecial' boolean),
+            // sắp xếp giảm dần theo 'sale' (hoặc một trường ưu tiên), lấy 2 sản phẩm đầu.
+            // Bạn có thể thay đổi logic này tùy theo cách bạn định nghĩa "special".
+            List<Product> specialProducts =
+                allProducts
+                    .where(
+                      (p) => p.sale > 0,
+                    ) // Giả sử sản phẩm đặc biệt là sản phẩm có sale
+                    .toList();
+            specialProducts.sort(
+              (a, b) => b.sale.compareTo(a.sale),
+            ); // Sắp xếp theo sale giảm dần
+            specialProducts =
+                specialProducts.take(2).toList(); // Lấy 2 sản phẩm
+
+            if (specialProducts.isEmpty) {
               return const Center(
                 child: Text(
                   'Không tìm thấy sản phẩm đặc biệt nào.',
@@ -52,13 +61,10 @@ class SpecialForYouSection extends StatelessWidget {
               );
             }
 
-            final specialProductDocs = snapshot.data!.docs;
-
             // Sử dụng Column để hiển thị các sản phẩm theo chiều dọc, mỗi sản phẩm là một khối
             return Column(
               children:
-                  specialProductDocs.map((doc) {
-                    final specialProduct = Product.fromFirestore(doc);
+                  specialProducts.map((specialProduct) {
                     final Widget bannerImage = buildProductImageWidget(
                       specialProduct.imageUrl,
                     );

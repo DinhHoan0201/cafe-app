@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:myapp/models/product_model.dart';
+import 'package:myapp/features/product/model/product_model.dart';
 
 class CategoryList extends StatelessWidget {
-  final CollectionReference<Map<String, dynamic>> productsCollection;
+  final List<Product> allProducts;
   final String? selectedCategoryName;
   final ValueChanged<String?> onCategorySelected;
 
   const CategoryList({
     super.key,
-    required this.productsCollection,
+    required this.allProducts,
     required this.selectedCategoryName,
     required this.onCategorySelected,
   });
@@ -18,15 +17,9 @@ class CategoryList extends StatelessWidget {
   Widget build(BuildContext context) {
     return SizedBox(
       height: 40,
-      child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-        stream:
-            productsCollection
-                .orderBy("name", descending: false) // Sắp xếp A-Z
-                .snapshots(),
-        builder: (context, snapshot) {
-          if (snapshot.hasError ||
-              !snapshot.hasData ||
-              snapshot.data!.docs.isEmpty) {
+      child: Builder(
+        builder: (context) {
+          if (allProducts.isEmpty) {
             return const Center(
               child: Text(
                 'Không có danh mục',
@@ -37,10 +30,8 @@ class CategoryList extends StatelessWidget {
 
           List<String> displayCategories = ["Tất cả"];
           final productNamesAsCategories =
-              snapshot.data!.docs
-                  .map((doc) => Product.fromFirestore(doc).name)
-                  .toSet()
-                  .toList();
+              allProducts.map((product) => product.name).toSet().toList()
+                ..sort();
           displayCategories.addAll(productNamesAsCategories);
 
           return ListView.builder(
