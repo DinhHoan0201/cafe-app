@@ -34,11 +34,10 @@ class _SearchBarWidgetState extends State<SearchBarWidget> {
       ),
       child: TextField(
         controller: _searchController,
-        style: const TextStyle(color: Colors.white), // Màu chữ khi nhập
+        style: const TextStyle(color: Colors.white),
         decoration: const InputDecoration(
           border: InputBorder.none,
           icon: Icon(Icons.search, color: Colors.white54),
-          hintText: 'Find your drink ...',
           hintStyle: TextStyle(color: Color.fromARGB(143, 255, 255, 255)),
         ),
       ),

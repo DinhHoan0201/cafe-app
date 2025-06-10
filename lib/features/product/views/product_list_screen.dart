@@ -112,6 +112,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
                                 )
                                 : const Icon(Icons.image, size: 50),
                         title: Text(product.name),
+                        subtitle: Text(product.type),
 
                         trailing: IconButton(
                           icon: const Icon(Icons.edit, color: Colors.blue),
