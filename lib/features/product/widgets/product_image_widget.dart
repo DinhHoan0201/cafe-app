@@ -31,7 +31,6 @@ Widget buildProductImageWidget(String imageUrl) {
   }
 
   if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
-    // Trường hợp URL là một liên kết trực tiếp (ví dụ: từ Cloudinary)
     return Image.network(
       imageUrl,
       key: ValueKey(imageUrl), // Thêm key dựa trên URL

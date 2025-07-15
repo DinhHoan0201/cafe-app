@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:myapp/features/product/model/product_model.dart';
 import 'package:myapp/features/product/widgets/product_image_widget.dart';
+import 'package:myapp/features/product/views/product_detail_screen.dart';
 
 class ProductList extends StatelessWidget {
   final List<Product> products;
@@ -13,6 +14,15 @@ class ProductList extends StatelessWidget {
     required this.searchQuery,
     this.selectedCategoryName,
   });
+  // navigate to product detail screen
+  void _navigateToProductDetail(BuildContext context, Product product) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ProductDetailScreen(product: product),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -31,7 +41,6 @@ class ProductList extends StatelessWidget {
 
           List<Product> filteredProducts = List.from(products);
 
-          // 1. Lọc theo category trước
           if (selectedCategoryName != null) {
             filteredProducts =
                 filteredProducts
@@ -39,7 +48,6 @@ class ProductList extends StatelessWidget {
                     .toList();
           }
 
-          // 2. Sau đó lọc theo searchQuery trên danh sách đã lọc theo category
           if (searchQuery.isNotEmpty) {
             final lowerCaseQuery = searchQuery.toLowerCase();
             filteredProducts =
@@ -82,10 +90,10 @@ class ProductList extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    ClipRRect(
-                      borderRadius: const BorderRadius.vertical(
-                        top: Radius.circular(16),
-                      ),
+                    GestureDetector(
+                      onTap: () {
+                        _navigateToProductDetail(context, product);
+                      },
                       child: productImageWidget,
                     ),
                     Padding(
@@ -103,6 +111,7 @@ class ProductList extends StatelessWidget {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
+
                           Text(
                             product.type,
                             style: const TextStyle(

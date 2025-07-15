@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:myapp/features/product/views/product_list_screen.dart';
 import 'signup_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -7,22 +8,18 @@ import 'package:myapp/core/constants/firestore_paths.dart';
 import "package:myapp/features/product/views/products_screen.dart";
 
 class Loginpage extends StatefulWidget {
-  // Changed to StatefulWidget
   const Loginpage({super.key});
-
   @override
   State<Loginpage> createState() => _LoginpageState();
 }
 
 class _LoginpageState extends State<Loginpage> {
-  final _formKey = GlobalKey<FormState>(); // Key for Form validation
-  final _emailController =
-      TextEditingController(); // Changed from _usernameController
+  final _formKey = GlobalKey<FormState>();
+  final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isPasswordVisible = false;
-  bool _isLoading = false; // To manage loading state
-  String? _errorMessage; // To display error messages
-
+  bool _isLoading = false;
+  String? _errorMessage;
   @override
   void dispose() {
     _emailController.dispose();
@@ -118,7 +115,7 @@ class _LoginpageState extends State<Loginpage> {
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
-    final ColorScheme colorScheme = theme.colorScheme;
+
     final TextTheme textTheme = theme.textTheme;
     final Size screenSize = MediaQuery.of(context).size;
 
@@ -256,12 +253,12 @@ class _LoginpageState extends State<Loginpage> {
                         height: 25,
                       ), // Original spacing if no error
                     _isLoading
-                        ? CircularProgressIndicator(color: colorScheme.primary)
+                        ? CircularProgressIndicator(color: Colors.white)
                         : ElevatedButton(
                           onPressed: _login,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: colorScheme.primary,
-                            foregroundColor: colorScheme.onPrimary,
+                            backgroundColor: Colors.orangeAccent,
+                            foregroundColor: Colors.white,
                             minimumSize: const Size(double.infinity, 50),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
@@ -283,9 +280,9 @@ class _LoginpageState extends State<Loginpage> {
                         GestureDetector(
                           onTap: _navigateToSignUp,
                           child: Text(
-                            "Sign Up",
+                            "Sign up with Google",
                             style: textTheme.bodyMedium?.copyWith(
-                              color: colorScheme.primary,
+                              color: Colors.orangeAccent,
                               fontWeight: FontWeight.bold,
                             ),
                           ),

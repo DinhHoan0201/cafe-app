@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:myapp/features/product/data/product_service.dart';
 import 'package:myapp/features/product/model/product_model.dart';
@@ -32,12 +33,12 @@ class ProductController with ChangeNotifier {
       print(_errorMessage);
     } finally {
       _isLoading = false;
-      notifyListeners(); // Thông báo UI rằng quá trình tải đã kết thúc (thành công hoặc thất bại)
+      notifyListeners();
     }
   }
 
   Future<bool> addProduct({
-    required String productId,
+    required String id,
     required String productName,
     required String productImageURL,
     required double productPrice,
@@ -45,14 +46,14 @@ class ProductController with ChangeNotifier {
     required String type,
     required bool status,
   }) async {
-    // Giữ nguyên logic của hàm addProduct
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
 
     try {
+      final docRef = FirebaseFirestore.instance.collection('products').doc();
       await _productService.addProduct(
-        productId: productId,
+        id: docRef.id,
         productName: productName,
         productImageURL: productImageURL,
         productPrice: productPrice,
@@ -60,7 +61,7 @@ class ProductController with ChangeNotifier {
         type: type,
         status: status,
       );
-      await fetchProducts(); // Bỏ comment nếu muốn tự động cập nhật list sau khi thêm
+      await fetchProducts();
       _isLoading = false;
       notifyListeners();
       return true;

@@ -9,7 +9,7 @@ class ProductService {
       firebase_storage.FirebaseStorage.instance;
 
   Future<void> addProduct({
-    required String productId,
+    required String id,
     required String productName,
     required String productImageURL,
     required double productPrice,
@@ -18,26 +18,27 @@ class ProductService {
     required bool status,
     //required String imageUrl, // Đây sẽ là đường dẫn từ Storage hoặc fallback
   }) async {
+    final docRef =
+        _firestore
+            .collection(FirestorePaths.topLevelCfdb)
+            .doc(FirestorePaths.defaultParentInCfdb)
+            .collection(FirestorePaths.productsSubCollection)
+            .doc();
     try {
-      await _firestore
-          .collection(FirestorePaths.topLevelCfdb)
-          .doc(FirestorePaths.defaultParentInCfdb)
-          .collection(FirestorePaths.productsSubCollection)
-          .doc(productId)
-          .set({
-            'name': productName,
-            'price': productPrice,
-            'description': productDescription,
-            'imageUrl': productImageURL,
-            'productId': productId,
-            'timestamp': FieldValue.serverTimestamp(),
-            'status': status,
-            //'sale': 0.0,
-            'type': type,
-          });
+      await docRef.set({
+        'productId': docRef.id,
+        'name': productName,
+        'price': productPrice,
+        'description': productDescription,
+        'imageUrl': productImageURL,
+        'timestamp': FieldValue.serverTimestamp(),
+        'status': status,
+        //'sale': 0.0,
+        'type': type,
+      });
     } catch (e) {
       print('Error adding product to Firestore: $e');
-      rethrow; // Ném lại lỗi để UI có thể xử lý
+      rethrow;
     }
   }
 
@@ -87,7 +88,7 @@ class ProductService {
           });
     } catch (e) {
       print('Error updating product in Firestore: $e');
-      rethrow; // Ném lại lỗi để UI có thể xử lý
+      rethrow;
     }
   }
 

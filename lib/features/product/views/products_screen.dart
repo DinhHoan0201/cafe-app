@@ -39,7 +39,6 @@ class _ProductsState extends State<Products> {
         return RefreshIndicator(
           onRefresh: () => controller.fetchProducts(),
           child: Scaffold(
-            backgroundColor: Colors.black,
             body: SafeArea(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -50,14 +49,7 @@ class _ProductsState extends State<Products> {
                       const SizedBox(height: 20),
                       const AppHeader(),
                       const SizedBox(height: 20),
-                      const Text(
-                        "Find the best\ncoffee for you",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+
                       const SizedBox(height: 20),
                       SearchBarWidget(
                         onSearchChanged: (query) {
@@ -68,8 +60,7 @@ class _ProductsState extends State<Products> {
                       ),
                       const SizedBox(height: 20),
                       CategoryList(
-                        allProducts:
-                            allProducts, // Truyền allProducts cho CategoryList
+                        allProducts: allProducts,
                         selectedCategoryName: _selectedCategoryName,
                         onCategorySelected: (categoryName) {
                           setState(() {
@@ -101,10 +92,8 @@ class _ProductsState extends State<Products> {
                         )
                       else
                         ProductList(
-                          products:
-                              allProducts, // Truyền toàn bộ danh sách sản phẩm
-                          selectedCategoryName:
-                              _selectedCategoryName, // Truyền category đã chọn
+                          products: allProducts,
+                          selectedCategoryName: _selectedCategoryName,
                           searchQuery: _searchQuery,
                         ),
                       const SizedBox(height: 10),
@@ -115,25 +104,26 @@ class _ProductsState extends State<Products> {
               ),
             ),
             bottomNavigationBar: BottomNavigationBar(
-              backgroundColor: Colors.black.withOpacity(0.7),
-              selectedItemColor: Colors.orange,
+              backgroundColor: Colors.white,
+              selectedItemColor: Colors.brown,
               type: BottomNavigationBarType.fixed,
-              unselectedItemColor: Colors.white,
+              unselectedItemColor: Colors.grey,
               items: const [
                 BottomNavigationBarItem(
-                  icon: Icon(Icons.home_outlined),
+                  icon: Icon(Icons.home_filled),
                   label: '',
                 ),
                 BottomNavigationBarItem(
                   icon: Icon(Icons.shopping_bag_outlined),
                   label: '',
                 ),
+                BottomNavigationBarItem(icon: Icon(Icons.coffee), label: ''),
                 BottomNavigationBarItem(
                   icon: Icon(Icons.favorite_border),
                   label: '',
                 ),
                 BottomNavigationBarItem(
-                  icon: Icon(Icons.person_outline),
+                  icon: Icon(Icons.location_on_outlined),
                   label: '',
                 ),
               ],

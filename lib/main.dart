@@ -39,13 +39,19 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Flutter Firebase Demo',
       debugShowCheckedModeBanner: false,
-      //home: const Products(),
-      home: const Loginpage(),
+      theme: ThemeData(
+        scaffoldBackgroundColor: Color(0xFFF7F1E6),
+        primarySwatch: Colors.teal,
+        visualDensity: VisualDensity.adaptivePlatformDensity,
+        fontFamily: "Itim",
+      ),
+      home: const Products(),
+      //home: const Loginpage(),
       //home: const AddProductScreen(),
       //home: CloudinaryUploadScreen(),
       //home: const Welcomepage(),
       //home: const ProductListScreen(),
-      // Đặt ProductListScreen làm màn hình chính
+      // Đặt ProductListScreen
       //home: const ProductListScreen(),
     );
   }

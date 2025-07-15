@@ -50,7 +50,6 @@ class _SignupPageState extends State<SignupPage> {
             );
 
         if (userCredential.user != null) {
-          // User created in Firebase Auth, now add to Firestore
           await FirebaseFirestore.instance
               .collection(FirestorePaths.topLevelCfdb)
               .doc(FirestorePaths.defaultParentInCfdb)

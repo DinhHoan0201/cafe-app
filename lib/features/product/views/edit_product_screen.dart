@@ -129,8 +129,6 @@ class _EditProductScreenState extends State<EditProductScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // UI tương tự như AddProductScreen, nhưng nút bấm sẽ là "Cập nhật sản phẩm"
-    // và tiêu đề AppBar là "Sửa sản phẩm"
     return Scaffold(
       appBar: AppBar(
         title: Text(

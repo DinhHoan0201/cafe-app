@@ -29,15 +29,15 @@ class _SearchBarWidgetState extends State<SearchBarWidget> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
-        color: Colors.grey[850],
+        color: Colors.white,
         borderRadius: BorderRadius.circular(12),
       ),
       child: TextField(
         controller: _searchController,
-        style: const TextStyle(color: Colors.white),
+        style: const TextStyle(color: Colors.brown),
         decoration: const InputDecoration(
           border: InputBorder.none,
-          icon: Icon(Icons.search, color: Colors.white54),
+          icon: Icon(Icons.search, color: Colors.brown),
           hintStyle: TextStyle(color: Color.fromARGB(143, 255, 255, 255)),
         ),
       ),

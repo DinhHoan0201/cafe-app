@@ -31,12 +31,8 @@ class _CloudinaryUploadScreenState extends State<CloudinaryUploadScreen> {
     }
   }
 
-  // Thay đổi: Hàm này sẽ pop và trả về URL đã upload
   void _confirmAndReturnUrl() {
-    Navigator.pop(
-      context,
-      _uploadedUrl, // Trả về URL đã upload
-    );
+    Navigator.pop(context, _uploadedUrl);
   }
 
   @override
@@ -51,7 +47,7 @@ class _CloudinaryUploadScreenState extends State<CloudinaryUploadScreen> {
               onPressed: _pickImage,
               child: Text('Chọn ảnh & Upload'),
             ),
-            SizedBox(height: 20), // Thêm khoảng cách
+            SizedBox(height: 20), 
 
             SizedBox(height: 20),
             if (_uploadedUrl != null) ...[
@@ -63,16 +59,8 @@ class _CloudinaryUploadScreenState extends State<CloudinaryUploadScreen> {
               Image.network(
                 _uploadedUrl!,
                 height: 200,
-              ), // Giới hạn chiều cao ảnh cho dễ nhìn
+              ), 
               SizedBox(height: 10),
-              Text('Link ảnh:', style: TextStyle(fontWeight: FontWeight.bold)),
-              SelectableText(
-                _uploadedUrl!,
-                style: TextStyle(
-                  color: Colors.blue,
-                  decoration: TextDecoration.underline,
-                ),
-              ),
             ],
             SizedBox(height: 20), // Thêm khoảng cách
             ElevatedButton(

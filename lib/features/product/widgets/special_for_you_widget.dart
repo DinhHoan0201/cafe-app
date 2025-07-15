@@ -3,12 +3,12 @@ import 'package:myapp/features/product/model/product_model.dart';
 import 'package:myapp/features/product/widgets/product_image_widget.dart'; // Import hàm build ảnh
 
 class SpecialForYouSection extends StatelessWidget {
-  final List<Product> allProducts; // Thay đổi: Nhận List<Product>
+  final List<Product> allProducts; 
 
   const SpecialForYouSection({
     super.key,
     required this.allProducts,
-  }); // Thay đổi
+  }); 
 
   @override
   Widget build(BuildContext context) {

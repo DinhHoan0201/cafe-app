@@ -12,7 +12,6 @@ class AddProductScreen extends StatefulWidget {
 class _AddProductScreenState extends State<AddProductScreen> {
   final _formKey = GlobalKey<FormState>();
 
-  final _productIdController = TextEditingController();
   final _productImageURLController = TextEditingController();
   final _productNameController = TextEditingController();
   final _productPriceController = TextEditingController();
@@ -25,7 +24,6 @@ class _AddProductScreenState extends State<AddProductScreen> {
   final ProductService _productService = ProductService();
   @override
   void dispose() {
-    _productIdController.dispose();
     _productImageURLController.dispose();
     _productNameController.dispose();
     _productPriceController.dispose();
@@ -56,12 +54,11 @@ class _AddProductScreenState extends State<AddProductScreen> {
     });
 
     try {
-      String productId = _productIdController.text.trim();
       String productImageURL = _productImageURLController.text.trim();
       String productName = _productNameController.text.trim();
       String productType = _productTypeController.text.trim();
       await _productService.addProduct(
-        productId: productId,
+        id: '', // ID sẽ được tự động tạo bởi Firestore
         productName: productName,
         productImageURL: productImageURL,
         productPrice: double.tryParse(_productPriceController.text.trim()) ?? 0,
@@ -73,15 +70,12 @@ class _AddProductScreenState extends State<AddProductScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            'Sản phẩm "$productName" (ID: $productId) đã được thêm thành công!',
-          ),
+          content: Text('Sản phẩm "$productName"  đã được thêm thành công!'),
         ),
       );
       // Xóa form sau khi thành công
       _formKey.currentState!.reset();
       setState(() {
-        _productIdController.clear();
         _productImageURLController.clear();
         _productNameController.clear();
         _productPriceController.clear();
@@ -117,7 +111,6 @@ class _AddProductScreenState extends State<AddProductScreen> {
               productPriceController: _productPriceController,
               productDescriptionController: _productDescriptionController,
               productTypeController: _productTypeController,
-              productIdController: _productIdController,
               productStatus: _productStatus,
               onProductStatusChanged: (value) {
                 setState(() {

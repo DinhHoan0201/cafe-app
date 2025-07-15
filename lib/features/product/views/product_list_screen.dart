@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:myapp/features/product/model/product_model.dart';
 import 'package:myapp/features/product/controller/product_controller.dart';
 import 'package:myapp/features/product/views/edit_product_screen.dart';
-
+import 'package:myapp/shared/widgets/search_bar_widget.dart';
 class ProductListScreen extends StatefulWidget {
   const ProductListScreen({super.key});
 
@@ -50,7 +50,6 @@ class _ProductListScreenState extends State<ProductListScreen> {
           if (controller.isLoading && controller.products.isEmpty) {
             return const Center(child: CircularProgressIndicator());
           }
-
           if (controller.errorMessage != null && controller.products.isEmpty) {
             return Center(
               child: Column(
@@ -69,10 +68,12 @@ class _ProductListScreenState extends State<ProductListScreen> {
           if (controller.products.isEmpty) {
             return const Center(child: Text('Không có sản phẩm nào.'));
           }
-
+          Container(
+              //const SearchBarWidget(),
+          );
           // Hiển thị danh sách sản phẩm
           return RefreshIndicator(
-            onRefresh: () => controller.fetchProducts(), // Kéo để làm mới
+            onRefresh: () => controller.fetchProducts(),
             child: ListView.builder(
               itemCount: controller.products.length,
               itemBuilder: (context, index) {
